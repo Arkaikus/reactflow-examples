@@ -45,7 +45,7 @@
   }
 }
 
-/* @media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: light) {
   @layer base {
     :root {
       @apply text-neutral-900 bg-white;
@@ -57,4 +57,4 @@
       @apply bg-neutral-50;
     }
   }
-} */
+}
