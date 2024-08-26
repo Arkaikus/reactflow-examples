@@ -24,13 +24,13 @@ function CustomNode({ data }) {
             {selected && <NodeResizer minWidth={100} minHeight={30} />}
             <Handle
                 type="target"
-                position={Position.Top}
-                className="w-16 !bg-teal-500"
+                position={Position.Left}
+                className="h-16 !bg-teal-500"
             />
             <Handle
                 type="source"
-                position={Position.Bottom}
-                className="w-16 !bg-teal-500"
+                position={Position.Right}
+                className="h-16 !bg-teal-500"
             />
         </div>
     );

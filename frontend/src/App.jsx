@@ -1,18 +1,19 @@
 import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-
+import { ReactFlowProvider } from '@xyflow/react';
 import NotFound from './components/404';
-import Quickstart from './components/quickstart';
+import { FlowExample } from './components/workflow';
 import './styles/App.css';
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <Routes>
-          <Route path="*" element={<Navigate to="/quickstart" />} />
-          <Route path="/quickstart" element={<Quickstart />} />
-          <Route path="/404" element={<NotFound />} />
-        </Routes>
+        <ReactFlowProvider>
+          <Routes>
+            <Route path="/" element={<FlowExample />} />
+            <Route path="/404" element={<NotFound />} />
+          </Routes>
+        </ReactFlowProvider>
       </div>
     </Router>
   );
