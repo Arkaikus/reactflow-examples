@@ -14,76 +14,75 @@ app.add_middleware(
 )
 
 
-class Workflow(BaseModel):
+class Node(BaseModel):
     id: str
     type: str
     data: dict
     position: dict  # x and y coordinates
-    edges: List[int]
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            id=data["id"],
+            type=data["type"],
+            data=data["data"],
+            position=data["position"],
+        )
 
 
 # Connect to MongoDB
 client = MongoClient("mongodb://mongo:27017/")
 db = client["workflows"]
 
-# Define the collection for workflows
-workflow_collection = db["workflows"]
+# Define the collection for nodes
+node_collection = db["nodes"]
 
 
-# Define a helper function to convert workflow dictionaries to Workflow objects
-def dict_to_workflow(d):
-    return Workflow(id=d["id"], type=d["type"], data=d["data"], position=d["position"], edges=d["edges"])
+@app.get("/nodes/")
+async def read_nodes():
+    nodes = [Node.from_dict(w) for w in node_collection.find()]
+    return nodes
 
 
-# Define the API endpoints
-
-
-@app.get("/workflows/")
-async def read_workflows():
-    workflows = [dict_to_workflow(w) for w in workflow_collection.find()]
-    return workflows
-
-
-@app.post("/workflows/")
-async def create_workflow(workflow: Workflow):
-    result = workflow_collection.insert_one(workflow.model_dump())
+@app.post("/nodes/")
+async def create_node(node: Node):
+    result = node_collection.insert_one(node.model_dump())
     if result.inserted_id:
-        return {"message": "Workflow created successfully"}
+        return {"message": "node created successfully", "id": result.inserted_id}
     else:
-        raise HTTPException(status_code=400, detail="Failed to create workflow")
+        raise HTTPException(status_code=400, detail="Failed to create node")
 
 
-@app.get("/workflows/{workflow_id}")
-async def read_workflow(workflow_id: str):
-    workflow = workflow_collection.find_one({"id": workflow_id})
-    if not workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    return dict_to_workflow(workflow)
+@app.get("/nodes/{node_id}")
+async def read_node(node_id: str):
+    node = node_collection.find_one({"id": node_id})
+    if not node:
+        raise HTTPException(status_code=404, detail="node not found")
+    return Node.from_dict(node)
 
 
-@app.put("/workflows/{workflow_id}")
-async def update_workflow(workflow_id: str, new_data: Workflow):
-    result = workflow_collection.update_one(
-        {"id": workflow_id},
+@app.put("/nodes/{node_id}")
+async def update_node(node_id: str, new_data: Node):
+    result = node_collection.update_one(
+        {"id": node_id},
         {
             "$set": {
                 "type": new_data.type,
                 "data": new_data.data,
                 "position": new_data.position,
-                "edges": new_data.edges,
             }
         },
     )
     if result.modified_count:
-        return {"message": "Workflow updated successfully"}
+        return {"message": "node updated successfully"}
     else:
-        raise HTTPException(status_code=400, detail="Failed to update workflow")
+        raise HTTPException(status_code=400, detail="Failed to update node")
 
 
-@app.delete("/workflows/{workflow_id}")
-async def delete_workflow(workflow_id: str):
-    result = workflow_collection.delete_one({"id": workflow_id})
+@app.delete("/nodes/{node_id}")
+async def delete_node(node_id: str):
+    result = node_collection.delete_one({"id": node_id})
     if result.deleted_count == 1:
-        return {"message": "Workflow deleted successfully"}
+        return {"message": "node deleted successfully"}
     else:
-        raise HTTPException(status_code=404, detail="Workflow not found")
+        raise HTTPException(status_code=404, detail="node not found")

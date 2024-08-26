@@ -60,7 +60,7 @@ export const FlowExample = () => {
         if (lock.current) return;
         lock.current = true;
         console.log("running effect")
-        fetch("http://localhost:8000/workflows/")
+        fetch("http://localhost:8000/nodes/")
             .then(response => response.json())
             .then(data => {
                 data.forEach((newNode) => {
