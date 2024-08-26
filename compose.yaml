@@ -11,7 +11,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     working_dir: /app
-    command: uvicorn app-mongo:app --reload --host 0.0.0.0 --port 8000
+    command: uvicorn app:app --reload --host 0.0.0.0 --port 8000
     volumes:
       - ./backend:/app
     ports:

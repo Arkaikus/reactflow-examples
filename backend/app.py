@@ -1,73 +1,88 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from pymongo import MongoClient
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 
-class Workflow(BaseModel):
-    id: int
+class Node(BaseModel):
+    id: str
     type: str
     data: dict
     position: dict  # x and y coordinates
-    edges: List[int]
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            id=data["id"],
+            type=data["type"],
+            data=data["data"],
+            position=data["position"],
+        )
 
 
-# In-memory storage for demonstration purposes only!
-workflows = [
-    {
-        "id": 1,
-        "type": "simple",
-        "data": {"name": "John", "job": "Software Engineer"},
-        "position": {"x": 10, "y": 20},
-        "edges": [2, 3],
-    },
-    {
-        "id": 2,
-        "type": "complex",
-        "data": {"name": "Alice", "job": "Data Scientist"},
-        "position": {"x": 30, "y": 40},
-        "edges": [1, 4],
-    },
-]
+# Connect to MongoDB
+client = MongoClient("mongodb://mongo:27017/")
+db = client["workflows"]
 
-# Define the API endpoints
+# Define the collection for nodes
+node_collection = db["nodes"]
 
 
-@app.get("/workflows/")
-async def read_workflows():
-    return workflows
+@app.get("/nodes/")
+async def read_nodes():
+    nodes = [Node.from_dict(w) for w in node_collection.find()]
+    return nodes
 
 
-@app.post("/workflows/")
-async def create_workflow(workflow: Workflow):
-    new_id = max([w["id"] for w in workflows]) + 1
-    workflow.id = new_id
-    workflows.append(workflow.dict())
-    return {"message": "Workflow created successfully"}
+@app.post("/nodes/")
+async def create_node(node: Node):
+    result = node_collection.insert_one(node.model_dump())
+    if result.inserted_id:
+        return {"message": "node created successfully", "id": result.inserted_id}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to create node")
 
 
-@app.get("/workflows/{workflow_id}")
-async def read_workflow(workflow_id: int):
-    workflow = next((w for w in workflows if w["id"] == workflow_id), None)
-    if not workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    return workflow
+@app.get("/nodes/{node_id}")
+async def read_node(node_id: str):
+    node = node_collection.find_one({"id": node_id})
+    if not node:
+        raise HTTPException(status_code=404, detail="node not found")
+    return Node.from_dict(node)
 
 
-@app.put("/workflows/{workflow_id}")
-async def update_workflow(workflow_id: int, new_data: Workflow):
-    workflow = next((w for w in workflows if w["id"] == workflow_id), None)
-    if not workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    workflow.update(new_data.dict(exclude_unset=True))
-    return {"message": "Workflow updated successfully"}
+@app.put("/nodes/{node_id}")
+async def update_node(node_id: str, new_data: Node):
+    result = node_collection.update_one(
+        {"id": node_id},
+        {
+            "$set": {
+                "type": new_data.type,
+                "data": new_data.data,
+                "position": new_data.position,
+            }
+        },
+    )
+    if result.modified_count:
+        return {"message": "node updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to update node")
 
 
-@app.delete("/workflows/{workflow_id}")
-async def delete_workflow(workflow_id: int):
-    workflow = next((w for w in workflows if w["id"] == workflow_id), None)
-    if not workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    workflows.remove(workflow)
-    return {"message": "Workflow deleted successfully"}
+@app.delete("/nodes/{node_id}")
+async def delete_node(node_id: str):
+    result = node_collection.delete_one({"id": node_id})
+    if result.deleted_count == 1:
+        return {"message": "node deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="node not found")
