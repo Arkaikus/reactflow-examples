@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pymongo import MongoClient
-from typing import List
 from fastapi.middleware.cors import CORSMiddleware
+from bson.objectid import ObjectId
 
 app = FastAPI()
 app.add_middleware(
@@ -23,7 +23,7 @@ class Node(BaseModel):
     @classmethod
     def from_dict(cls, data):
         return cls(
-            id=data["id"],
+            id=str(data["_id"]),
             type=data["type"],
             data=data["data"],
             position=data["position"],
@@ -48,14 +48,14 @@ async def read_nodes():
 async def create_node(node: Node):
     result = node_collection.insert_one(node.model_dump())
     if result.inserted_id:
-        return {"message": "node created successfully", "id": result.inserted_id}
+        return {"message": "node created successfully", "id": str(result.inserted_id)}
     else:
         raise HTTPException(status_code=400, detail="Failed to create node")
 
 
 @app.get("/nodes/{node_id}")
 async def read_node(node_id: str):
-    node = node_collection.find_one({"id": node_id})
+    node = node_collection.find_one({"_id": ObjectId(node_id)})
     if not node:
         raise HTTPException(status_code=404, detail="node not found")
     return Node.from_dict(node)
@@ -64,7 +64,7 @@ async def read_node(node_id: str):
 @app.put("/nodes/{node_id}")
 async def update_node(node_id: str, new_data: Node):
     result = node_collection.update_one(
-        {"id": node_id},
+        {"_id": ObjectId(node_id)},
         {
             "$set": {
                 "type": new_data.type,
@@ -81,7 +81,7 @@ async def update_node(node_id: str, new_data: Node):
 
 @app.delete("/nodes/{node_id}")
 async def delete_node(node_id: str):
-    result = node_collection.delete_one({"id": node_id})
+    result = node_collection.delete_one({"_id": ObjectId(node_id)})
     if result.deleted_count == 1:
         return {"message": "node deleted successfully"}
     else:
