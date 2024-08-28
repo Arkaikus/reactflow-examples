@@ -19,15 +19,22 @@ class Node(BaseModel):
     type: str
     data: dict
     position: dict  # x and y coordinates
+    width: int
+    height: int
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data: dict):
         return cls(
             id=str(data["_id"]),
             type=data["type"],
             data=data["data"],
             position=data["position"],
+            width=data.get("width", 200),
+            height=data.get("height", 100),
         )
+
+    def to_dict(self):
+        return {f: getattr(self, f) for f in self.model_fields if f != "id"}
 
 
 # Connect to MongoDB
@@ -62,16 +69,10 @@ async def read_node(node_id: str):
 
 
 @app.put("/nodes/{node_id}")
-async def update_node(node_id: str, new_data: Node):
+async def update_node(node_id: str, node: Node):
     result = node_collection.update_one(
         {"_id": ObjectId(node_id)},
-        {
-            "$set": {
-                "type": new_data.type,
-                "data": new_data.data,
-                "position": new_data.position,
-            }
-        },
+        {"$set": node.to_dict()},
     )
     if result.modified_count:
         return {"message": "node updated successfully"}

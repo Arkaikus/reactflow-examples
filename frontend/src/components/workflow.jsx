@@ -7,7 +7,10 @@ import {
     useEdgesState,
     addEdge,
     MiniMap,
-    Controls
+    Controls,
+    getIncomers,
+    getOutgoers,
+    getConnectedEdges
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/base.css";
@@ -20,15 +23,7 @@ const nodeTypes = {
 
 const getNodeId = () => `${String(+new Date()).slice(6)}`;
 
-const initialNodes = [
-    // {
-    //     id: "1",
-    //     type: "custom",
-    //     data: { name: "John Doe", job: "CEO", emoji: "😎" },
-    //     position: { x: 0, y: 50 },
-    //     edges: {}
-    // },
-];
+const initialNodes = [];
 const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
 
 export const FlowExample = () => {
@@ -38,23 +33,90 @@ export const FlowExample = () => {
         (params) => setEdges((eds) => addEdge(params, eds)),
         []
     );
+
     const [state, setState] = useState({ name: "", job: "", emoji: "" });
     const lock = useRef(false);
 
     const onAdd = () => {
         const id = getNodeId();
         const newNode = {
-            id,
+            id: id,
             type: "custom",
             data: state,
             position: {
                 x: 0,
                 y: 0 + (nodes.length + 1) * 20
-            }
+            },
+            width: 150,
+            height: 50,
         };
-        setNodes((nds) => nds.concat(newNode));
+
+        fetch("http://localhost:8000/nodes", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newNode),
+        })
+            .then(response => response.json())
+            .then(data => {
+                newNode.id = data.id
+                setNodes((nds) => nds.concat(newNode));
+            });
     };
 
+    const onNodesDelete = useCallback(
+        (deleted) => {
+            deleted.forEach((node) => {
+                fetch("http://localhost:8000/nodes/" + node.id, { method: "DELETE" })
+                    .then(response => response.json())
+                    .then(console.log);
+            });
+            setEdges(
+                deleted.reduce((acc, node) => {
+                    const incomers = getIncomers(node, nodes, edges);
+                    const outgoers = getOutgoers(node, nodes, edges);
+                    const connectedEdges = getConnectedEdges([node], edges);
+
+                    const remainingEdges = acc.filter(
+                        (edge) => !connectedEdges.includes(edge),
+                    );
+
+                    const createdEdges = incomers.flatMap(({ id: source }) =>
+                        outgoers.map(({ id: target }) => ({
+                            id: `${source}->${target}`,
+                            source,
+                            target,
+                        })),
+                    );
+
+                    return [...remainingEdges, ...createdEdges];
+                }, edges),
+            );
+        },
+        [nodes, edges],
+    );
+
+    const onNodeDragStop = useCallback(
+        (event, node) => {
+            fetch("http://localhost:8000/nodes/" + node.id, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    id: node.id,
+                    type: node.type,
+                    data: node.data,
+                    position: node.position,
+                    width: node.width,
+                    height: node.height
+                }),
+            })
+                .then(response => response.json())
+                .then(console.log);
+        },
+    );
 
     useEffect(() => {
         if (lock.current) return;
@@ -64,7 +126,6 @@ export const FlowExample = () => {
             .then(response => response.json())
             .then(data => {
                 data.forEach((newNode) => {
-                    // console.log(item) 
                     setNodes((nds) => nds.concat(newNode))
                 })
             });
@@ -103,6 +164,8 @@ export const FlowExample = () => {
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    onNodesDelete={onNodesDelete}
+                    onNodeDragStop={onNodeDragStop}
                     nodeTypes={nodeTypes}
                     fitView
                 >
