@@ -1,17 +1,9 @@
 import React, { memo, useState } from 'react';
-import { Handle, Position, NodeToolbar, NodeResizer } from '@xyflow/react';
+import { Handle, Position, NodeResizer } from '@xyflow/react';
 
-function CustomNode({ data }) {
-    const [selected, setSelected] = useState(false)
-
+function CustomNode({ data, selected }) {
     return (
-        <div className="flex items-center justify-start h-full px-4 py-2 align-middle bg-white border-2 rounded-md shadow-md border-stone-400" onClick={() => setSelected(!selected)}>
-            <NodeToolbar>
-                <button>delete</button>
-                <button>copy</button>
-                <button>expand</button>
-
-            </NodeToolbar>
+        <div className="flex items-center justify-start h-full px-4 py-2 align-middle bg-white border-2 rounded-md shadow-md border-stone-400" >
             <div className="flex">
                 <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full">
                     {data.emoji}
@@ -21,7 +13,7 @@ function CustomNode({ data }) {
                     <div className="text-gray-500">{data.job}</div>
                 </div>
             </div>
-            {selected && <NodeResizer minWidth={100} minHeight={30} />}
+            <NodeResizer minWidth={200} minHeight={100} isVisible={!!selected} />
             <Handle
                 type="target"
                 position={Position.Left}
