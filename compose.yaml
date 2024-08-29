@@ -17,11 +17,14 @@ services:
     ports:
       - "8000:8000"
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: oven/bun:1.1.22-debian
     working_dir: /app
-    entrypoint: bun run dev
+    entrypoint:
+    - /bin/bash
+    - -c
+    - |
+      bun install
+      bun run dev --host 0.0.0.0
     volumes:
       - ./frontend:/app
     ports:
