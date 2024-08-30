@@ -1,7 +1,7 @@
-
 from pydantic import BaseModel
+from models import DictMixin
 
-class Node(BaseModel):
+class Node(DictMixin, BaseModel):
     id: str
     type: str
     data: dict
@@ -20,5 +20,3 @@ class Node(BaseModel):
             height=data.get("height", 100),
         )
 
-    def to_dict(self):
-        return {f: getattr(self, f) for f in self.model_fields if f != "id"}

@@ -24,46 +24,65 @@ const nodeTypes = {
 const getNodeId = () => `${String(+new Date()).slice(6)}`;
 
 const initialNodes = [];
-const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
+const initialEdges = [];
 
 export const FlowExample = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const onConnect = useCallback(
-        (params) => setEdges((eds) => addEdge(params, eds)),
+        (params) => {
+            fetch("http://localhost:8000/edges", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    type: "default",
+                    ...params,
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    setEdges((eds) => addEdge(params, eds))
+                });
+
+        },
         []
     );
 
     const [state, setState] = useState({ name: "", job: "", emoji: "" });
     const lock = useRef(false);
 
-    const onAdd = () => {
-        const id = getNodeId();
-        const newNode = {
-            id: id,
-            type: "custom",
-            data: state,
-            position: {
-                x: 0,
-                y: 0 + (nodes.length + 1) * 20
-            },
-            width: 150,
-            height: 50,
-        };
+    const addNode = useCallback(
+        () => {
+            const id = getNodeId();
+            const newNode = {
+                id: id,
+                type: "custom",
+                data: state,
+                position: {
+                    x: 0,
+                    y: 0 + (nodes.length + 1) * 20
+                },
+                width: 150,
+                height: 50,
+            };
 
-        fetch("http://localhost:8000/nodes", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newNode),
-        })
-            .then(response => response.json())
-            .then(data => {
-                newNode.id = data.id
-                setNodes((nds) => nds.concat(newNode));
-            });
-    };
+            fetch("http://localhost:8000/nodes", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newNode),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    newNode.id = data.id
+                    setNodes((nds) => nds.concat(newNode));
+                });
+        }
+    );
 
     const onNodesDelete = useCallback(
         (deleted) => {
@@ -97,6 +116,18 @@ export const FlowExample = () => {
         [nodes, edges],
     );
 
+    const onEdgesDelete = useCallback(
+        (deleted) => {
+            deleted.forEach((edge) => {
+                fetch("http://localhost:8000/edges/" + edge.id, { method: "DELETE" })
+                    .then(response => response.json())
+                    .then(console.log);
+            });
+            setEdges((eds) => eds.filter((e) => !deleted.includes(e)));
+        },
+        [edges],
+    );
+
     const onNodeDragStop = useCallback(
         (event, node) => {
             fetch("http://localhost:8000/nodes/" + node.id, {
@@ -118,6 +149,7 @@ export const FlowExample = () => {
         },
     );
 
+    // Fetch nodes from the server
     useEffect(() => {
         if (lock.current) return;
         lock.current = true;
@@ -127,6 +159,13 @@ export const FlowExample = () => {
             .then(data => {
                 data.forEach((newNode) => {
                     setNodes((nds) => nds.concat(newNode))
+                })
+            });
+        fetch("http://localhost:8000/edges/")
+            .then(response => response.json())
+            .then(data => {
+                data.forEach((newEdge) => {
+                    setEdges((eds) => addEdge(newEdge, eds))
                 })
             });
     }, [])
@@ -155,7 +194,7 @@ export const FlowExample = () => {
                         setState((prev) => ({ ...prev, emoji: e.target.value }));
                     }}
                 />
-                <button onClick={onAdd}>add node</button>
+                <button onClick={addNode}>add node</button>
             </div>
             <div className="w-full h-full">
                 <ReactFlow
@@ -166,6 +205,7 @@ export const FlowExample = () => {
                     onConnect={onConnect}
                     onNodesDelete={onNodesDelete}
                     onNodeDragStop={onNodeDragStop}
+                    onEdgesDelete={onEdgesDelete}
                     nodeTypes={nodeTypes}
                     fitView
                 >

@@ -6,3 +6,4 @@ db = client["workflows"]
 
 # Define the collection for nodes
 node_collection = db["nodes"]
+edge_collection = db["edges"]

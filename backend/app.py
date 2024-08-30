@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.nodes import node_router
+from routes.edges import edge_router
 
 app = FastAPI()
 app.add_middleware(
@@ -12,3 +13,4 @@ app.add_middleware(
 )
 
 app.include_router(node_router)
+app.include_router(edge_router)
