@@ -32,7 +32,7 @@ export const FlowExample = () => {
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const onConnect = useCallback(
         (params) => {
-            fetch(`http://${VITE_API_PATH}/edges`, {
+            fetch(`${VITE_API_PATH}/edges`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -70,7 +70,7 @@ export const FlowExample = () => {
                 height: 50,
             };
 
-            fetch(`http://${VITE_API_PATH}/nodes`, {
+            fetch(`${VITE_API_PATH}/nodes`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -88,7 +88,7 @@ export const FlowExample = () => {
     const onNodesDelete = useCallback(
         (deleted) => {
             deleted.forEach((node) => {
-                fetch(`http://${VITE_API_PATH}/nodes/` + node.id, { method: "DELETE" })
+                fetch(`${VITE_API_PATH}/nodes/` + node.id, { method: "DELETE" })
                     .then(response => response.json())
                     .then(console.log);
             });
@@ -120,7 +120,7 @@ export const FlowExample = () => {
     const onEdgesDelete = useCallback(
         (deleted) => {
             deleted.forEach((edge) => {
-                fetch(`http://${VITE_API_PATH}/edges/` + edge.id, { method: "DELETE" })
+                fetch(`${VITE_API_PATH}/edges/` + edge.id, { method: "DELETE" })
                     .then(response => response.json())
                     .then(console.log);
             });
@@ -131,7 +131,7 @@ export const FlowExample = () => {
 
     const onNodeDragStop = useCallback(
         (event, node) => {
-            fetch(`http://${VITE_API_PATH}/nodes/` + node.id, {
+            fetch(`${VITE_API_PATH}/nodes/` + node.id, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -155,14 +155,14 @@ export const FlowExample = () => {
         if (lock.current) return;
         lock.current = true;
         console.log("running effect")
-        fetch(`http://${VITE_API_PATH}/nodes/`)
+        fetch(`${VITE_API_PATH}/nodes/`)
             .then(response => response.json())
             .then(data => {
                 data.forEach((newNode) => {
                     setNodes((nds) => nds.concat(newNode))
                 })
             });
-        fetch(`http://${VITE_API_PATH}/edges/`)
+        fetch(`${VITE_API_PATH}/edges/`)
             .then(response => response.json())
             .then(data => {
                 data.forEach((newEdge) => {
