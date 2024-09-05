@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.nodes import node_router
 from routes.edges import edge_router
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins

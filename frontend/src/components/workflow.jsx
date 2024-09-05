@@ -25,13 +25,14 @@ const getNodeId = () => `${String(+new Date()).slice(6)}`;
 
 const initialNodes = [];
 const initialEdges = [];
+const VITE_API_PATH = import.meta.env.VITE_API_PATH;
 
 export const FlowExample = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const onConnect = useCallback(
         (params) => {
-            fetch("http://localhost:8000/edges", {
+            fetch(`http://${VITE_API_PATH}/edges`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -69,7 +70,7 @@ export const FlowExample = () => {
                 height: 50,
             };
 
-            fetch("http://localhost:8000/nodes", {
+            fetch(`http://${VITE_API_PATH}/nodes`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -87,7 +88,7 @@ export const FlowExample = () => {
     const onNodesDelete = useCallback(
         (deleted) => {
             deleted.forEach((node) => {
-                fetch("http://localhost:8000/nodes/" + node.id, { method: "DELETE" })
+                fetch(`http://${VITE_API_PATH}/nodes/` + node.id, { method: "DELETE" })
                     .then(response => response.json())
                     .then(console.log);
             });
@@ -119,7 +120,7 @@ export const FlowExample = () => {
     const onEdgesDelete = useCallback(
         (deleted) => {
             deleted.forEach((edge) => {
-                fetch("http://localhost:8000/edges/" + edge.id, { method: "DELETE" })
+                fetch(`http://${VITE_API_PATH}/edges/` + edge.id, { method: "DELETE" })
                     .then(response => response.json())
                     .then(console.log);
             });
@@ -130,7 +131,7 @@ export const FlowExample = () => {
 
     const onNodeDragStop = useCallback(
         (event, node) => {
-            fetch("http://localhost:8000/nodes/" + node.id, {
+            fetch(`http://${VITE_API_PATH}/nodes/` + node.id, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -154,14 +155,14 @@ export const FlowExample = () => {
         if (lock.current) return;
         lock.current = true;
         console.log("running effect")
-        fetch("http://localhost:8000/nodes/")
+        fetch(`http://${VITE_API_PATH}/nodes/`)
             .then(response => response.json())
             .then(data => {
                 data.forEach((newNode) => {
                     setNodes((nds) => nds.concat(newNode))
                 })
             });
-        fetch("http://localhost:8000/edges/")
+        fetch(`http://${VITE_API_PATH}/edges/`)
             .then(response => response.json())
             .then(data => {
                 data.forEach((newEdge) => {
