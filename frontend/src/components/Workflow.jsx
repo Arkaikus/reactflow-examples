@@ -10,12 +10,14 @@ import {
     Controls,
     getIncomers,
     getOutgoers,
-    getConnectedEdges
+    getConnectedEdges,
+    useReactFlow,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/base.css";
 
-import CustomNode from "./custom";
+import CustomNode from "./Custom";
+import { useDragDrop } from "../context/drag-drop";
 
 const nodeTypes = {
     custom: CustomNode
@@ -27,9 +29,62 @@ const initialNodes = [];
 const initialEdges = [];
 const VITE_API_PATH = import.meta.env.VITE_API_PATH;
 
+function createNode(node) {
+    return fetch(`${VITE_API_PATH}/nodes`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(node),
+    })
+        .then(response => response.json())
+
+}
+
+
 export const FlowExample = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const { screenToFlowPosition } = useReactFlow();
+    const [type] = useDragDrop();
+
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
+
+    const onDrop = useCallback(
+        (event) => {
+            event.preventDefault();
+
+            // check if the dropped element is valid
+            if (!type) {
+                return;
+            }
+
+            // project was renamed to screenToFlowPosition
+            // and you don't need to subtract the reactFlowBounds.left/top anymore
+            // details: https://reactflow.dev/whats-new/2023-11-10
+            const position = screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
+            const newNode = {
+                id: getNodeId(),
+                type,
+                position,
+                data: { name: "", job: "", emoji: "" },
+                width: 150,
+                height: 50,
+            };
+            createNode(newNode).then(data => {
+                newNode.id = data.id
+                setNodes((nds) => nds.concat(newNode));
+            });
+        },
+        [screenToFlowPosition, type],
+    );
+
     const onConnect = useCallback(
         (params) => {
             fetch(`${VITE_API_PATH}/edges`, {
@@ -69,19 +124,11 @@ export const FlowExample = () => {
                 width: 150,
                 height: 50,
             };
-
-            fetch(`${VITE_API_PATH}/nodes`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newNode),
-            })
-                .then(response => response.json())
-                .then(data => {
-                    newNode.id = data.id
-                    setNodes((nds) => nds.concat(newNode));
-                });
+            createNode(newNode).then(data => {
+                console.log(data);
+                newNode.id = data.id;
+                setNodes((nds) => nds.concat(newNode));
+            });
         }
     );
 
@@ -172,7 +219,7 @@ export const FlowExample = () => {
     }, [])
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col w-full h-full">
             <div className="p-4">
                 <input className="p-2 m-2 text-indigo-400 bg-white"
                     type="text"
@@ -207,6 +254,8 @@ export const FlowExample = () => {
                     onNodesDelete={onNodesDelete}
                     onNodeDragStop={onNodeDragStop}
                     onEdgesDelete={onEdgesDelete}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
                     nodeTypes={nodeTypes}
                     fitView
                 >
