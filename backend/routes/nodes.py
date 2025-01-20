@@ -9,8 +9,7 @@ node_router = APIRouter()
 
 @node_router.get("/nodes/")
 async def read_nodes():
-    nodes = [Node.from_dict(w) for w in node_collection.find()]
-    return nodes
+    return [Node.from_dict(w) for w in node_collection.find()]
 
 
 @node_router.post("/nodes/")

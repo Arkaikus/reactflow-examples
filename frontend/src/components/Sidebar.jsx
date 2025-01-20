@@ -1,28 +1,36 @@
-import React from 'react';
-import { useDragDrop } from '../context/drag-drop';
+import React from "react";
+import { useDragDrop } from "../context/drag-drop";
+import { CustomNodeFrame } from "./Custom";
 
 function Sidebar() {
-    const [_, setType] = useDragDrop();
-
-    const onDragStart = (event, nodeType) => {
-        setType(nodeType);
-        event.dataTransfer.effectAllowed = 'move';
+    const [_, setData] = useDragDrop();
+    let data = { emoji: "🆕", name: "custom", job: "node" };
+    const onDragStart = (event, data) => {
+        setData(data);
+        event.dataTransfer.effectAllowed = "move";
     };
 
     return (
         <aside>
-            <div className="description">You can drag these nodes to the pane on the right.</div>
-            <div className="dndnode input" onDragStart={(event) => onDragStart(event, 'input')} draggable>
-                Input Node
+            <div className="mb-4 text-xl description">
+                Workflow Builder
             </div>
-            <div className="dndnode" onDragStart={(event) => onDragStart(event, 'default')} draggable>
+            <div className="mb-4 description">
+                You can drag these nodes to the pane on the right.
+            </div>
+            <div
+                className="dndnode input"
+                onDragStart={(event) => onDragStart(event, data)}
+                draggable
+            >
+                <CustomNodeFrame data={data} />
+            </div>
+            {/* add more node types here */}
+            {/* <div className="dndnode" onDragStart={(event) => onDragStart(event, 'default')} draggable>
                 Default Node
-            </div>
-            <div className="dndnode output" onDragStart={(event) => onDragStart(event, 'output')} draggable>
-                Output Node
-            </div>
+            </div> */}
         </aside>
     );
-};
+}
 
 export default Sidebar;

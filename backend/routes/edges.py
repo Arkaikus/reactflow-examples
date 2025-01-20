@@ -9,8 +9,7 @@ edge_router = APIRouter()
 
 @edge_router.get("/edges/")
 async def read_edges():
-    edges = [Edge.from_dict(w) for w in edge_collection.find()]
-    return edges
+    return [Edge.from_dict(w) for w in edge_collection.find()]
 
 
 @edge_router.post("/edges/")
