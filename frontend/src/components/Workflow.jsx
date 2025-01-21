@@ -17,11 +17,11 @@ import { MdClose } from "react-icons/md";
 
 import "@xyflow/react/dist/base.css";
 
-import CustomNode from "./Custom";
+import ExampleNode from "./ExampleNode";
 import { useDragDrop } from "../context/drag-drop";
 
 const nodeTypes = {
-    custom: CustomNode,
+    custom: ExampleNode,
 };
 
 const getNodeId = () => `${String(+new Date()).slice(6)}`;
@@ -56,7 +56,7 @@ function toggleBackdrop() {
     backdrop.classList.toggle("hidden");
 }
 
-export const FlowExample = () => {
+export const Workflow = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const { screenToFlowPosition } = useReactFlow();

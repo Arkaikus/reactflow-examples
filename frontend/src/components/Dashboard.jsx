@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar"
-import { FlowExample } from "./Workflow";
+import { Workflow } from "./Workflow";
 import DragDropContext from "../context/drag-drop";
 
 const Dashboard = () => {
@@ -10,7 +10,7 @@ const Dashboard = () => {
         <DragDropContext.Provider value={[data, setData]}>
             <div className="flex w-full h-full m-0">
                 <Sidebar className="w-2/12" />
-                <FlowExample className="w-full" />
+                <Workflow className="w-full" />
             </div>
         </DragDropContext.Provider>
     );

@@ -1,6 +1,6 @@
 import React from "react";
 import { useDragDrop } from "../context/drag-drop";
-import { CustomNodeFrame } from "./Custom";
+import { ExampleNodeContent } from "./ExampleNode";
 
 function Sidebar() {
     const [_, setData] = useDragDrop();
@@ -23,7 +23,7 @@ function Sidebar() {
                 onDragStart={(event) => onDragStart(event, data)}
                 draggable
             >
-                <CustomNodeFrame data={data} />
+                <ExampleNodeContent data={data} />
             </div>
             {/* add more node types here */}
             {/* <div className="dndnode" onDragStart={(event) => onDragStart(event, 'default')} draggable>

@@ -1,7 +1,7 @@
 import React, { memo, useState } from "react";
 import { Handle, Position, NodeResizer } from "@xyflow/react";
 
-export function CustomNodeFrame({ data }) {
+export function ExampleNodeContent({ data }) {
     return (
         <div className="flex items-center w-full h-full m-0 align-middle border-2 rounded-md shadow-md border-stone-400">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full">
@@ -15,10 +15,10 @@ export function CustomNodeFrame({ data }) {
     );
 }
 
-function CustomNode({ data, selected }) {
+function ExampleNode({ data, selected }) {
     return (
         <div className="flex items-center justify-start h-full align-middle bg-white">
-            <CustomNodeFrame data={data} />
+            <ExampleNodeContent data={data} />
             <NodeResizer
                 minWidth={200}
                 minHeight={100}
@@ -38,4 +38,4 @@ function CustomNode({ data, selected }) {
     );
 }
 
-export default memo(CustomNode);
+export default memo(ExampleNode);
